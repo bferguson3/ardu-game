@@ -17,28 +17,43 @@ PROGMEM const byte jpstring2[] = { 0xf0, 0x55,0x8e,0x71,0x6b,0x48,0x4d,0x6c,0x08
 ////////////////////////////
 //Sprite GFX Def Block//////
 ////////////////////////////
+//Player sprite
 PROGMEM const byte player_down_1[] = { 0x30, 0x16, 0xed, 0xcd, 0x4d, 0x2d, 0x36, 0x10, };
 PROGMEM const byte player_down_2[] = { 0x10, 0x36, 0x2d, 0x4d, 0xcd, 0xed, 0x16, 0x30, };
-PROGMEM const byte player_right_1[] = { 0x00, 0x6c, 0x5e, 0x9e, 0xda, 0x5a, 0x2c, 0x00, };
+PROGMEM const byte player_right_1[] = { 0x00, 0x6c, 0x5e, 0x9e, 0xda, 0x5a, 0x2c, 0x00,};
 PROGMEM const byte player_right_2[] = { 0x20, 0x16, 0xaf, 0x4f, 0x6d, 0xad, 0x16, 0x00, };
 PROGMEM const byte player_left_1[] = { 0x00, 0x2c, 0x5a, 0xda, 0x9e, 0x5e, 0x6c, 0x00, };
 PROGMEM const byte player_left_2[] = { 0x00, 0x16, 0xad, 0x6d, 0x4f, 0xaf, 0x16, 0x20, };
 PROGMEM const byte player_up_1[] = { 0x30, 0x16, 0xef, 0xcf, 0x4f, 0x2f, 0x36, 0x10, };
 PROGMEM const byte player_up_2[] = { 0x10, 0x36, 0x2f, 0x4f, 0xcf, 0xef, 0x16, 0x30, };
-
+//Player mask
+PROGMEM const byte player_up_mask[] = { 0x00, 0x00, 0x10, 0x30, 0x30, 0x10, 0x00, 0x00, };
+PROGMEM const byte player_down_mask[] = { 0x00, 0x00, 0x12, 0x32, 0x32, 0x12, 0x00, 0x00, };
+PROGMEM const byte player_left_mask_1[] = { 0x00, 0x00, 0x12, 0x12, 0x30, 0x10, 0x00, 0x00, };
+PROGMEM const byte player_left_mask_2[] = { 0x00, 0x00, 0x24, 0x24, 0x60, 0x20, 0x00, 0x00, };
+PROGMEM const byte player_right_mask_1[] = { 0x00, 0x00, 0x10, 0x30, 0x12, 0x12, 0x00, 0x00, };
+PROGMEM const byte player_right_mask_2[] = { 0x00, 0x00, 0x20, 0x60, 0x24, 0x24, 0x00, 0x00, };
 //pointer array to sprites (byte arr) 
 const byte *player_sheet[] = { player_down_1, player_down_2, player_right_1, player_right_2, 
                                player_left_1, player_left_2, player_up_1, player_up_2 };
+const byte *player_mask_sheet[] = { player_down_mask, player_down_mask, player_right_mask_2, player_right_mask_1,
+                                    player_left_mask_2, player_left_mask_1, player_up_mask, player_up_mask };
 
+//Global Variables
+//////////////////
 byte player_frame = 0x00;
 byte player_frame_delay = 0x00;
-const byte p_anim_speed = 0x03; 
+const byte p_anim_speed = 0x04; 
 const byte player_speed = 0x01;
 byte player_x = 0x20;
 byte player_y = 0x20;
 byte player_dir_offset = 0x00;
 
+bool p_moving = false;
 
+/////////////////////////////
+//System Init Block        //
+/////////////////////////////
 void setup()
 {
   arduboyQuickInit();
@@ -74,21 +89,31 @@ void loop()
 
   //Input code:
   if(arduboy.pressed(UP_BUTTON)) {
+    p_moving = true;
     player_dir_offset = 6;
     player_y -= player_speed;
   }
-  if(arduboy.pressed(DOWN_BUTTON)) {
+  else if(arduboy.pressed(DOWN_BUTTON)) {
+    p_moving = true;
     player_dir_offset = 0;
     player_y += player_speed;
   }
-  if(arduboy.pressed(RIGHT_BUTTON)) {
+  else if(arduboy.pressed(RIGHT_BUTTON)) {
+    p_moving = true;
     player_dir_offset = 2;
     player_x += player_speed;
   }
-  if(arduboy.pressed(LEFT_BUTTON)) {
+  else if(arduboy.pressed(LEFT_BUTTON)) {
+    p_moving = true;
     player_dir_offset = 4;
     player_x -= player_speed;
-  }  
+  }
+  else
+  {
+    p_moving = false;
+  }
+
+  
   draw();
 }
 
@@ -102,7 +127,10 @@ void draw()
   arduboy.clear(); //Erase vbuffer
 
   drawText(0, 0, jpstring2, sizeof(jpstring2));
+
+  if(!p_moving) player_frame = 0;
   arduboy.drawBitmap(player_x, player_y, player_sheet[player_frame+player_dir_offset], 8, 8, WHITE);
+  arduboy.drawBitmap(player_x, player_y, player_mask_sheet[player_frame+player_dir_offset], 8, 8, BLACK);
   
   arduboy.display(); //Push vbuffer
 }
